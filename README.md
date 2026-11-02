@@ -3,6 +3,8 @@
 > **⚠️ SECURITY WARNING:**  
 > This application contains intentional security vulnerabilities (SQL Injection, IDOR, SSRF, weak JWT secret). **Do NOT host this directly on sensitive infrastructure or production networks.** Run only in isolated sandboxes, dedicated containers, or lab environments.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rohithkichu818-collab/blitz-cyber-era)
+
 ---
 
 ## Local Development

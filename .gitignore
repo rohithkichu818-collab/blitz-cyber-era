@@ -1,5 +1,4 @@
 node_modules/
-blitz.db
-blitz.db-journal
+blitz.db*
 cloudflared.exe
 .env

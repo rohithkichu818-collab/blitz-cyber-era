@@ -1,7 +1,6 @@
 node_modules
 npm-debug.log
-blitz.db
-blitz.db-journal
+blitz.db*
 .git
 .gitignore
 .env

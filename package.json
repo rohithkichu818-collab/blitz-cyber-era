@@ -1,0 +1,15 @@
+{
+  "name": "blitz-cyber-era",
+  "version": "1.0.0",
+  "description": "Blitz Cyber Era - intentionally vulnerable horror CTF. LOCAL/LAB USE ONLY.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

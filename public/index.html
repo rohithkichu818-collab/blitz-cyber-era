@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blitz Cyber Era</title>
+<style>
+:root{--bg:#07070a;--card:#101016;--blood:#b3001b;--glow:#ff2a4d;--text:#d8d4d4;--dim:#7a7480}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh;overflow-x:hidden}
+.fog,.fog2{position:fixed;inset:-20%;pointer-events:none;background:radial-gradient(ellipse at 30% 40%,rgba(120,0,20,.18),transparent 55%),radial-gradient(ellipse at 70% 70%,rgba(60,60,90,.15),transparent 50%);animation:drift 24s linear infinite alternate}
+.fog2{animation-duration:37s;animation-direction:alternate-reverse;opacity:.7}
+@keyframes drift{to{transform:translate(8%,5%) scale(1.15)}}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(transparent 45%,#000 130%),repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+body.flash{animation:flash .7s}@keyframes flash{0%,100%{filter:none}20%{filter:brightness(2.5) saturate(0)}45%{filter:brightness(.4)}}
+body.shake{animation:shake .4s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+header{text-align:center;padding:28px 10px 8px;position:relative}
+h1{font-size:clamp(28px,6vw,56px);margin:0;letter-spacing:6px;color:var(--glow);text-shadow:0 0 12px var(--blood),0 0 30px var(--blood);animation:flick 5s infinite;position:relative}
+h1::before,h1::after{content:attr(data-t);position:absolute;left:0;right:0;opacity:.6}
+h1::before{color:#0ff;animation:glitch 3s infinite steps(1);clip-path:inset(0 0 60% 0)}h1::after{color:#f0f;animation:glitch 3.4s infinite steps(1) reverse;clip-path:inset(60% 0 0 0)}
+@keyframes glitch{0%,90%{transform:none}92%{transform:translate(-4px,1px)}95%{transform:translate(4px,-1px)}}
+@keyframes flick{0%,18%,22%,62%,64%,100%{opacity:1}20%,63%{opacity:.35}}
+.sub{color:var(--dim);letter-spacing:4px;font-size:12px}
+.drips{height:30px;background:repeating-linear-gradient(90deg,transparent 0 40px,var(--blood) 40px 44px);mask:linear-gradient(#000,transparent);opacity:.6;animation:drip 6s ease-in-out infinite alternate;transform-origin:top}
+@keyframes drip{to{transform:scaleY(1.8)}}
+main{max-width:980px;margin:auto;padding:10px 16px 60px;position:relative;z-index:2}
+.box{background:var(--card);border:1px solid #2a1218;border-radius:6px;padding:16px;margin:14px 0;box-shadow:0 0 0 1px #000,0 0 20px rgba(179,0,27,.12)}
+input,button{font:inherit;background:#0b0b10;color:var(--text);border:1px solid #3a1a22;padding:8px 10px;border-radius:4px}
+button{cursor:pointer;background:#2a0710;transition:.2s}button:hover{background:var(--blood);box-shadow:0 0 12px var(--glow)}
+nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}nav .sp{flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.card{animation:rise .8s both}@keyframes rise{from{opacity:0;transform:translateY(20px)}}
+.card h3{margin:0 0 6px;color:#f2c;}.tag{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid}
+.Easy{color:#6f6}.Intermediate{color:#fd3}.Advanced{color:#f93}.Hard{color:#f33}
+.card.done{border-color:#1c6b2a}.card.done h3::after{content:" ☠ SOLVED";color:#6f6;font-size:12px}
+pre{background:#050508;padding:8px;border-radius:4px;max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-size:12px;color:#9c9}
+.row{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}.row input{flex:1;min-width:90px}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #222;text-align:left}
+.hide{display:none}small{color:var(--dim)}
+</style></head><body>
+<div class="fog"></div><div class="fog2"></div>
+<header><h1 data-t="BLITZ CYBER ERA">BLITZ CYBER ERA</h1><div class="sub">THE DEAD KEEP NO SECRETS</div></header><div class="drips"></div>
+<main>
+<section id="join" class="box" style="text-align:center">
+  <p>Enter your name, mortal, to be written in the Book of the Damned.</p>
+  <div class="row" style="justify-content:center"><input id="pname" maxlength="24" placeholder="Player / team name" style="max-width:260px;flex:0 1 260px"><button id="joinBtn">ENTER THE CRYPT</button></div>
+  <small>Sound plays after you enter. Use the 🔊 button to mute.</small>
+</section>
+<section id="game" class="hide">
+  <nav class="box"><b id="who"></b><span id="score"></span><span class="sp"></span>
+    <button data-tab="chals">Challenges</button><button data-tab="board">Scoreboard</button><button id="mute">🔊</button></nav>
+  <div id="chals" class="grid"></div>
+  <div id="board" class="box hide"><table><thead><tr><th>#</th><th>Player</th><th>Score</th></tr></thead><tbody></tbody></table></div>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s),api=(u,b)=>fetch(u,b?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}:{}).then(async r=>({s:r.status,j:await r.json().catch(()=>({}))}));
+const track=(type,detail)=>fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type,detail})});
+// ---- Sound (WebAudio, no files needed) ----
+let ac,muted=false;
+function tone(f,d=.2,t='sine',v=.08,to){if(muted||!ac)return;const o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;o.type=t;o.frequency.setValueAtTime(f,n);if(to)o.frequency.exponentialRampToValueAtTime(to,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(g).connect(ac.destination);o.start();o.stop(n+d)}
+function ambient(){const o=ac.createOscillator(),l=ac.createOscillator(),lg=ac.createGain(),f=ac.createBiquadFilter(),g=ac.createGain();o.type='sawtooth';o.frequency.value=48;f.type='lowpass';f.frequency.value=180;g.gain.value=.05;l.frequency.value=.15;lg.gain.value=.03;l.connect(lg).connect(g.gain);o.connect(f).connect(g).connect(ac.destination);o.start();l.start();
+  setInterval(()=>{if(Math.random()<.4)tone(900+Math.random()*600,1.2,'sine',.015,200)},7000)}
+const S={click:()=>tone(180,.08,'square',.05,90),ok:()=>{[392,494,587,784].forEach((f,i)=>setTimeout(()=>tone(f,.4,'triangle',.09),i*110))},bad:()=>tone(110,.45,'sawtooth',.12,40),creak:()=>tone(300,.7,'sawtooth',.03,120)};
+const fx=c=>{document.body.classList.remove(c);void document.body.offsetWidth;document.body.classList.add(c)};
+document.addEventListener('click',e=>{if(e.target.tagName==='BUTTON')S.click()});
+$('#mute').onclick=()=>{muted=!muted;$('#mute').textContent=muted?'🔇':'🔊'};
+// ---- Challenges ----
+const show=(el,x)=>{el.textContent=typeof x==='string'?x:JSON.stringify(x,null,2)};
+const C={
+1:{d:'Crawlers obey rules. The dead do not. Something was told to stay out of the graveyard... find what whispers there.',
+  t:o=>`<button class="a">Knock on the crypt gate</button>`,run:async(el,o)=>{const r=await fetch('/robots.txt');show(o,await r.text())}},
+2:{d:'Every soul in the registry has a number. You may only read your own... or may you? One soul is forgotten.',
+  t:()=>`<div class="row"><input type="number" class="id" placeholder="soul id"><button class="a">Read soul</button></div><small>Your soul id: <b class="sid"></b></small>`,
+  run:async(el,o)=>{const r=await api('/api/souls/'+encodeURIComponent(el.querySelector('.id').value));show(o,r.j)}},
+3:{d:'The Warden holds the gate. His notes hold a secret. Find a way through without his password.',
+  t:()=>`<div class="row"><input class="u" placeholder="username"><input class="p" placeholder="password"><button class="a">Open gate</button></div>`,
+  run:async(el,o)=>{const r=await api('/api/login',{username:el.querySelector('.u').value,password:el.querySelector('.p').value});show(o,r.j)}},
+4:{d:'Only the Keeper may open the vault. A visitor account exists: ghost / boo123. Your token is stored in a cookie. Is the seal strong?',
+  t:()=>`<div class="row"><button class="g">Login as ghost</button><button class="a">Open vault</button></div><small>cookie: crypt_token</small>`,
+  run:async(el,o)=>{const r=await api('/api/vault');show(o,r.j)},
+  extra:async(el,o)=>{const r=await api('/api/login',{username:'ghost',password:'boo123'});show(o,r.j)}},
+5:{d:'Summon a spirit from a URL. The realm of the living (localhost) is forbidden, yet a ritual runs within: /internal/ritual on port 3000.',
+  t:()=>`<div class="row"><input class="url" placeholder="http://..."><button class="a">Summon</button></div>`,
+  run:async(el,o)=>{const r=await api('/api/seance',{url:el.querySelector('.url').value});show(o,r.j)}}};
+async function load(){
+  const [m,cs]=await Promise.all([api('/api/me'),api('/api/challenges')]);
+  if(m.s!==200)return;const me=m.j;
+  $('#join').classList.add('hide');$('#game').classList.remove('hide');$('#who').textContent='☠ '+me.name;$('#score').textContent=' | '+me.score+' pts';
+  $('#chals').innerHTML='';
+  cs.j.forEach((c,i)=>{const k=C[c.id],el=document.createElement('div');el.className='box card'+(me.solved.includes(c.id)?' done':'');el.style.animationDelay=i*.15+'s';
+    el.innerHTML=`<h3>${c.id}. ${c.title}</h3><span class="tag ${c.diff}">${c.diff}</span> <small>${c.pts} pts</small><p>${k.d}</p>${k.t()}<pre class="out">...</pre>
+    <div class="row"><input class="flag" placeholder="BLITZ{...}"><button class="sub2">Submit</button></div>`;
+    const o=el.querySelector('.out');if(el.querySelector('.sid'))el.querySelector('.sid').textContent=me.soulId;
+    el.querySelector('.a').onclick=()=>{track('use',c.title);S.creak();k.run(el,o)};
+    if(el.querySelector('.g'))el.querySelector('.g').onclick=()=>k.extra(el,o);
+    el.querySelector('.sub2').onclick=async()=>{const r=await api('/api/submit',{cid:c.id,flag:el.querySelector('.flag').value});
+      if(r.j.correct&&!r.j.already){S.ok();fx('flash');load()}else if(r.j.already){o.textContent='Already claimed.'}else{S.bad();fx('shake')}};
+    $('#chals').append(el)})}
+async function board(){const r=await api('/api/scoreboard');$('#board tbody').innerHTML=r.j.map((p,i)=>`<tr><td>${i+1}</td><td></td><td>${p.score}</td></tr>`).join('');
+  [...$('#board tbody').rows].forEach((tr,i)=>tr.cells[1].textContent=r.j[i].name)}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{['chals','board'].forEach(t=>$('#'+t).classList.toggle('hide',t!==b.dataset.tab));if(b.dataset.tab==='board')board();track('tab',b.dataset.tab)});
+$('#joinBtn').onclick=async()=>{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ambient();S.creak();
+  const r=await api('/api/join',{name:$('#pname').value});if(r.s===200)load();else{S.bad();fx('shake')}};
+api('/api/me').then(r=>{if(r.s===200)$('#pname').value='',load()});
+document.body.addEventListener('click',()=>{if(!ac&&!$('#game').classList.contains('hide')){ac=new AudioContext();ambient()}},{once:true});
+</script></body></html>

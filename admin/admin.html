@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Blitz Cyber Era - Admin</title>
+<style>
+body{margin:0;background:#07070a;color:#d8d4d4;font-family:'Courier New',monospace;padding:16px}
+h1{color:#ff2a4d;text-shadow:0 0 12px #b3001b;letter-spacing:4px;margin:0 0 12px;animation:f 5s infinite}@keyframes f{0%,92%,100%{opacity:1}94%{opacity:.4}}
+.wrap{display:grid;grid-template-columns:1fr 1.3fr;gap:14px}@media(max-width:850px){.wrap{grid-template-columns:1fr}}
+.box{background:#101016;border:1px solid #2a1218;border-radius:6px;padding:12px;box-shadow:0 0 18px rgba(179,0,27,.12)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px;border-bottom:1px solid #222;text-align:left}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.on{background:#3f3;box-shadow:0 0 8px #3f3}.off{background:#555}
+#feed{max-height:70vh;overflow:auto;font-size:12px}.ev{padding:3px 0;border-bottom:1px solid #1b1b22;animation:in .5s}@keyframes in{from{background:#3a0712}}
+.flag_correct{color:#6f6;font-weight:bold}.flag_wrong{color:#f66}.join{color:#6cf}.ui{color:#fd3}.request{color:#9a9}
+button{background:#2a0710;color:#ddd;border:1px solid #3a1a22;padding:5px 10px;cursor:pointer}
+</style></head><body>
+<h1>☠ BLITZ CYBER ERA — WATCHTOWER</h1>
+<div><button id="snd">🔊 alerts on</button> <small id="stat"></small></div>
+<div class="wrap">
+ <div class="box"><h3>Players</h3><table><thead><tr><th>Player</th><th>Score</th><th>Solved</th><th>Last action</th></tr></thead><tbody id="pl"></tbody></table></div>
+ <div class="box"><h3>Live movements</h3><div id="feed"></div></div>
+</div>
+<script>
+let last=0,ac,mute=false;const $=s=>document.querySelector(s);
+const beep=(f,d=.3)=>{if(mute)return;ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.setValueAtTime(.08,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)};
+$('#snd').onclick=()=>{mute=!mute;$('#snd').textContent=mute?'🔇 alerts off':'🔊 alerts on'};
+const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;e.textContent=x;return e};
+async function tick(){
+  const p=await (await fetch('api/players')).json();const tb=$('#pl');tb.innerHTML='';
+  p.forEach(r=>{const tr=document.createElement('tr'),on=Date.now()-r.last_seen<30000;
+    const a=mk('td','',r.name);const d=mk('span','dot '+(on?'on':'off'),'');a.prepend(d);
+    tr.append(a,mk('td','',r.score),mk('td','',r.solved+'/5'),mk('td','',r.last_action||'-'));tb.append(tr)});
+  const ev=await (await fetch('api/events?since='+last)).json();
+  ev.reverse().forEach(e=>{last=Math.max(last,e.id);const d=mk('div','ev '+e.type,'');
+    d.textContent=`${new Date(e.ts).toLocaleTimeString()}  [${e.name||'?'}]  ${e.type}  ${e.detail}`;$('#feed').prepend(d);
+    if(e.type==='flag_correct')beep(880,.6);else if(e.type==='flag_wrong')beep(120,.2)});
+  $('#stat').textContent=` ${p.filter(x=>Date.now()-x.last_seen<30000).length} online / ${p.length} total`;
+}
+tick();setInterval(tick,2000);
+</script></body></html>

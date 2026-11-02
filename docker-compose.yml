@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  blitz-ctf:
+    build: .
+    container_name: blitz-cyber-era
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    environment:
+      - PORT=3000
+      - ADMIN_PORT=4000
+      - ADMIN_USER=admin
+      - ADMIN_PASS=changeme
+    volumes:
+      # Persist SQLite database across restarts
+      - ./data:/app/data

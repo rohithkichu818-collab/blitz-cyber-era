@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+blitz.db
+blitz.db-journal
+.git
+.gitignore
+.env
+cloudflared.exe
